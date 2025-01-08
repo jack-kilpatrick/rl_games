@@ -233,6 +233,7 @@ class A2CBase(BaseAlgorithm):
 
         self.games_to_track = self.config.get('games_to_track', 100)
         print('current training device:', self.ppo_device)
+        # Keep running averages of episode rewards
         self.game_rewards = torch_ext.AverageMeter(self.value_size, self.games_to_track).to(self.ppo_device)
         self.game_shaped_rewards = torch_ext.AverageMeter(self.value_size, self.games_to_track).to(self.ppo_device)
         self.game_lengths = torch_ext.AverageMeter(1, self.games_to_track).to(self.ppo_device)
@@ -1382,6 +1383,10 @@ class ContinuousA2CBase(A2CBase):
 
                     for i in range(self.value_size):
                         rewards_name = 'rewards' if i == 0 else 'rewards{0}'.format(i)
+                        # Current running average of episode rewards
+                        # step or frame, means number of environment iterations
+                        # iter or epoch_num, means number of training iterations (each of which consists of horizon_length environment iterations)
+                        # time or total_time, means total wall clock time passed running the environment and training
                         self.writer.add_scalar(rewards_name + '/step'.format(i), mean_rewards[i], frame)
                         self.writer.add_scalar(rewards_name + '/iter'.format(i), mean_rewards[i], epoch_num)
                         self.writer.add_scalar(rewards_name + '/time'.format(i), mean_rewards[i], total_time)
