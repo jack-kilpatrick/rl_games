@@ -551,6 +551,8 @@ class SACAgent(BaseAlgorithm):
             fps_step_inference = curr_frames / play_time
             fps_total = curr_frames / epoch_total_time
 
+            should_exit = False
+
             print_statistics(self.print_stats, curr_frames, step_time, play_time, epoch_total_time, 
                 self.epoch_num, self.max_epochs, self.frame, self.max_frames)
 
@@ -584,8 +586,6 @@ class SACAgent(BaseAlgorithm):
                 self.writer.add_scalar('episode_lengths/time', mean_lengths, total_time)
                 checkpoint_name = self.config['name'] + '_ep_' + str(self.epoch_num) + '_rew_' + str(mean_rewards)
 
-                should_exit = False
-
                 if self.save_freq > 0:
                     if self.epoch_num % self.save_freq == 0:
                         self.save(os.path.join(self.nn_dir, 'last_' + checkpoint_name))
@@ -599,27 +599,27 @@ class SACAgent(BaseAlgorithm):
                         self.save(os.path.join(self.nn_dir, checkpoint_name))
                         should_exit = True
 
-                if self.epoch_num >= self.max_epochs and self.max_epochs != -1:
-                    if self.game_rewards.current_size == 0:
-                        print('WARNING: Max epochs reached before any env terminated at least once')
-                        mean_rewards = -np.inf
+            if self.epoch_num >= self.max_epochs and self.max_epochs != -1:
+                if self.game_rewards.current_size == 0:
+                    print('WARNING: Max epochs reached before any env terminated at least once')
+                    mean_rewards = -np.inf
 
-                    self.save(os.path.join(self.nn_dir, 'last_' + self.config['name'] + '_ep_' + str(self.epoch_num) \
-                        + '_rew_' + str(mean_rewards).replace('[', '_').replace(']', '_')))
-                    print('MAX EPOCHS NUM!')
-                    should_exit = True
+                self.save(os.path.join(self.nn_dir, 'last_' + self.config['name'] + '_ep_' + str(self.epoch_num) \
+                    + '_rew_' + str(mean_rewards).replace('[', '_').replace(']', '_')))
+                print('MAX EPOCHS NUM!')
+                should_exit = True
 
-                if self.frame >= self.max_frames and self.max_frames != -1:
-                    if self.game_rewards.current_size == 0:
-                        print('WARNING: Max frames reached before any env terminated at least once')
-                        mean_rewards = -np.inf
+            if self.frame >= self.max_frames and self.max_frames != -1:
+                if self.game_rewards.current_size == 0:
+                    print('WARNING: Max frames reached before any env terminated at least once')
+                    mean_rewards = -np.inf
 
-                    self.save(os.path.join(self.nn_dir, 'last_' + self.config['name'] + '_frame_' + str(self.frame) \
-                        + '_rew_' + str(mean_rewards).replace('[', '_').replace(']', '_')))
-                    print('MAX FRAMES NUM!')
-                    should_exit = True
+                self.save(os.path.join(self.nn_dir, 'last_' + self.config['name'] + '_frame_' + str(self.frame) \
+                    + '_rew_' + str(mean_rewards).replace('[', '_').replace(']', '_')))
+                print('MAX FRAMES NUM!')
+                should_exit = True
 
-                update_time = 0
+            update_time = 0
 
-                if should_exit:
-                    return self.last_mean_rewards, self.epoch_num
+            if should_exit:
+                return self.last_mean_rewards, self.epoch_num
